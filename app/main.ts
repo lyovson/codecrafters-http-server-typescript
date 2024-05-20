@@ -20,7 +20,7 @@ const server = net.createServer((socket) => {
       if (encoding && encoding.indexOf("gzip") !== -1) {
         compressedBody = zlib.gzipSync(body).toString("hex");
         headers = `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
-          compressedBody ? compressedBody.length : echoPath.length
+          compressedBody ? zlib.gzipSync(body).byteLength : echoPath.length
         }\r\n`;
       }
       console.log(compressedBody);
