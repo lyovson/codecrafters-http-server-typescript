@@ -33,7 +33,7 @@ const server = net.createServer((socket) => {
       try {
         const fileContent = fs.readFileSync(filePath);
         const headers = `Content-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n`;
-
+        console.log(fileContent);
         socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${fileContent}`);
       } catch (err) {
         socket.write(`HTTP/1.1 404 Not Found\r\n\r\n`);
