@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as net from "net";
+import * as zlib from "zlib";
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
@@ -11,15 +12,22 @@ const server = net.createServer((socket) => {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
       const [_, echoPath] = path.split("/echo/");
+      const body = headerLines[headerLines.length - 1];
       let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
       const encoding = headerLines
         .filter((line) => line.startsWith("Accept-Encoding"))[0]
         ?.split(": ")[1];
+      let compressedBody;
       if (encoding && encoding.indexOf("gzip") !== -1) {
         headers += `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\n`;
+        compressedBody = zlib.gzipSync(body);
       }
 
-      socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${echoPath}`);
+      socket.write(
+        `HTTP/1.1 200 OK\r\n${headers}\r\n${
+          compressedBody ? compressedBody : echoPath
+        }`
+      );
     } else if (path === "/user-agent") {
       const agent = headerLines
         .filter((line) => line.startsWith("User-Agent"))[0]
