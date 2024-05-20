@@ -10,24 +10,26 @@ const server = net.createServer((socket) => {
 
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
-    } else if (path.startsWith("/echo/")) {
-      const [_, echoPath] = path.split("/echo/");
+    }
+    if (path.startsWith("/echo/")) {
+      const echoPath = path.slice(6);
       const body = headerLines[headerLines.length - 1];
-      let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
+      let headers = `Content-Type: text/plain\r\n`;
       const encoding = headerLines
         .filter((line) => line.startsWith("Accept-Encoding"))[0]
         ?.split(": ")[1];
       let compressedBody;
       if (encoding && encoding.indexOf("gzip") !== -1) {
-        headers += `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\n`;
-        compressedBody = zlib.gzipSync(body).toString("base64");
+        const buffer = zlib.gzipSync(echoPath);
+        headers += `Content-Encoding: gzip\r\nContent-Length: ${buffer.length}\r\n`;
+        compressedBody = buffer;
+      } else {
+        headers += `Content-Length: ${echoPath.length}\r\n`;
       }
-
-      console.log(compressedBody);
 
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
-          compressedBody ? compressedBody : echoPath
+          compressedBody ? compressedBody.toString("binary") : echoPath
         }`
       );
     } else if (path === "/user-agent") {
