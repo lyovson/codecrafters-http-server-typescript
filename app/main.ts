@@ -24,6 +24,7 @@ const server = net.createServer((socket) => {
           compressedBody ? compressedBody.length : echoPath.length
         }\r\n`;
       }
+      console.log(headers);
 
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
