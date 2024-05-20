@@ -13,14 +13,14 @@ const server = net.createServer((socket) => {
     } else if (path.startsWith("/echo/")) {
       const [_, echoPath] = path.split("/echo/");
       const body = headerLines[headerLines.length - 1];
-      let headers = `Content-Type: text/plain\r\n`;
+      let headers;
       const encoding = headerLines
         .filter((line) => line.startsWith("Accept-Encoding"))[0]
         ?.split(": ")[1];
       let compressedBody;
       if (encoding && encoding.indexOf("gzip") !== -1) {
         compressedBody = zlib.gzipSync(body);
-        headers += `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
+        headers = `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
           compressedBody ? compressedBody.length : echoPath.length
         }\r\n`;
       }
