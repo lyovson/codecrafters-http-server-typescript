@@ -25,9 +25,11 @@ const server = net.createServer((socket) => {
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
     } else if (path.startsWith("/file/")) {
-      const [_, fileName] = path.split("/file/");
-      const [__, dir] = process.argv.slice(2);
-      const filePath = `${dir}${fileName}`;
+      const [_, __, fileName] = path.split("/");
+      const args = process.argv.slice(2);
+      const [___, absPath] = args;
+      const filePath = absPath + "/" + fileName;
+
       try {
         const fileContent = fs.readFileSync(filePath);
         const headers = `Content-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n`;
