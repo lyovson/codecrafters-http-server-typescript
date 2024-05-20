@@ -24,15 +24,16 @@ const server = net.createServer((socket) => {
       );
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
-    } else if (path.startsWith("/file/")) {
-      const fileName = path.slice(6); // "/file/" has 6 characters
-      const dir = process.argv[process.argv.length - 1]; // Get the last argument directly
+    } else if (path.startsWith("/files/")) {
+      const [_, __, fileName] = path.split("/");
+      const args = process.argv.slice(2);
+      const [___, dir] = args;
       const filePath = dir + "/" + fileName;
 
       console.log(fileName);
 
       try {
-        const file = fs.readFileSync(filePath, "utf-8"); // Use filePath directly
+        const file = fs.readFileSync(dir + "/" + fileName, "utf-8");
         if (file) {
           socket.write(
             `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${file.length}\r\n\r\n${file}`
