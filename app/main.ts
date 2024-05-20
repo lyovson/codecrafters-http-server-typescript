@@ -15,6 +15,7 @@ const server = net.createServer((socket) => {
         .map((line) => line.split(": "))
         .filter((line) => line[0] === "User-Agent")
         .flat()[1];
+      console.log(headerLines);
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
     } else {
