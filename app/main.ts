@@ -12,10 +12,13 @@ const server = net.createServer((socket) => {
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${echoPath}`);
     } else if (path === "/user-agent") {
       const agent = headerLines
-        .map((line) => line.split(": "))
-        .filter((line) => line[0] === "User-Agent")
-        .flat()[1];
-      console.log(headerLines);
+        .filter((line) => line.startsWith("User-Agent"))[0]
+        .split(": ")[1];
+      console.log(
+        headerLines
+          .filter((line) => line.startsWith("User-Agent"))[0]
+          .split(": ")[1]
+      );
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
     } else {
