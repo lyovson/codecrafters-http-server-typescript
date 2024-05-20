@@ -2,16 +2,21 @@ import * as net from "net";
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
-    // const request = data.toString().split("\r\n")[0].split(" ")[1];
     const [requestLine, ...headerLines] = data.toString().split("\r\n");
     const [method, path, version] = requestLine.split(" ");
-    // console.log(path);
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
       const [_, echoPath] = path.split("/echo/");
       const headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${echoPath}`);
+    } else if (path === "/user-agent") {
+      const agent = headerLines
+        .map((line) => line.split(": "))
+        .filter((line) => line[0] === "User-Agent")
+        .flat()[1];
+      const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
+      socket.write(`HTTP/1.1 200 OK\r\n\${headers}r\n${agent}`);
     } else {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
     }
