@@ -28,37 +28,38 @@ const handleRoot = () =>
   createResponse(
     200,
     { "Content-Type": "text/plain", "Content-Length": "0" },
-    ""
+    Buffer.from("")
   );
 
 // Handler for the echo path
 const handleEcho = (path: string, headerLines: string[]) => {
   const echoPath = path.slice(6);
-  const body = headerLines[headerLines.length - 1];
   const encoding = getHeader(headerLines, "Accept-Encoding");
-  const compressedBody = encoding.includes("gzip")
-    ? zlib.gzipSync(echoPath)
-    : null;
+  const body = Buffer.from(echoPath, "utf-8");
+  const compressedBody = encoding.includes("gzip") ? zlib.gzipSync(body) : null;
 
   const headers = {
     "Content-Type": "text/plain",
-    "Content-Encoding": compressedBody ? "gzip" : undefined,
-    "Content-Length": compressedBody
-      ? compressedBody.length.toString()
-      : Buffer.byteLength(echoPath).toString(),
+    ...(compressedBody
+      ? {
+          "Content-Encoding": "gzip",
+          "Content-Length": compressedBody.length.toString(),
+        }
+      : { "Content-Length": body.length.toString() }),
   };
 
-  return createResponse(200, headers, compressedBody || Buffer.from(echoPath));
+  return createResponse(200, headers, compressedBody || body);
 };
 
 // Handler for the user-agent path
 const handleUserAgent = (headerLines: string[]) => {
   const userAgent = getHeader(headerLines, "User-Agent");
+  const body = Buffer.from(userAgent, "utf-8");
   const headers = {
     "Content-Type": "text/plain",
-    "Content-Length": Buffer.byteLength(userAgent).toString(),
+    "Content-Length": body.length.toString(),
   };
-  return createResponse(200, headers, Buffer.from(userAgent));
+  return createResponse(200, headers, body);
 };
 
 // Handler for the files path
@@ -69,24 +70,24 @@ const handleFiles = (path: string, method: string, headerLines: string[]) => {
   const filePath = `${dir}/${fileName}`;
 
   if (method === "POST") {
-    const body = headerLines[headerLines.length - 1];
+    const body = Buffer.from(headerLines[headerLines.length - 1], "utf-8");
     return safeFileOperation(() => {
       fs.writeFileSync(filePath, body);
       return createResponse(
         201,
         { "Content-Type": "text/plain", "Content-Length": "0" },
-        ""
+        Buffer.from("")
       );
     }, 500);
   }
 
   return safeFileOperation(() => {
-    const file = fs.readFileSync(filePath, "utf-8");
+    const file = fs.readFileSync(filePath);
     const headers = {
       "Content-Type": "application/octet-stream",
-      "Content-Length": Buffer.byteLength(file).toString(),
+      "Content-Length": file.length.toString(),
     };
-    return createResponse(200, headers, Buffer.from(file));
+    return createResponse(200, headers, file);
   }, 404);
 };
 
@@ -98,7 +99,7 @@ const safeFileOperation = (operation: () => string, errorCode: number) => {
     return createResponse(
       errorCode,
       { "Content-Type": "text/plain", "Content-Length": "0" },
-      ""
+      Buffer.from("")
     );
   }
 };
@@ -107,11 +108,13 @@ const safeFileOperation = (operation: () => string, errorCode: number) => {
 const createResponse = (
   statusCode: number,
   headers: Record<string, string>,
-  body: string | Buffer
-) =>
-  `HTTP/1.1 ${statusCode} ${getStatusMessage(statusCode)}\r\n${createHeaders(
-    headers
-  )}\r\n\r\n` + body.toString();
+  body: Buffer
+) => {
+  const headerString = `HTTP/1.1 ${statusCode} ${getStatusMessage(
+    statusCode
+  )}\r\n${createHeaders(headers)}\r\n\r\n`;
+  return Buffer.concat([Buffer.from(headerString, "utf-8"), body]);
+};
 
 // Helper function to get status message
 const getStatusMessage = (statusCode: number) => {
@@ -140,10 +143,10 @@ const requestHandler = (socket: net.Socket) => (data: Buffer) => {
       : createResponse(
           404,
           { "Content-Type": "text/plain", "Content-Length": "0" },
-          ""
+          Buffer.from("")
         );
 
-  socket.write(response, "binary");
+  socket.write(response);
   socket.end();
 };
 
