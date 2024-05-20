@@ -23,6 +23,8 @@ const server = net.createServer((socket) => {
         compressedBody = zlib.gzipSync(body).toString("base64");
       }
 
+      console.log(compressedBody);
+
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
           compressedBody ? compressedBody : echoPath
