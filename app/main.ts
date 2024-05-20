@@ -11,7 +11,6 @@ const server = net.createServer((socket) => {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
       const echoPath = path.slice(6);
-      const body = headerLines[headerLines.length - 1];
       let headers = `Content-Type: text/plain\r\n`;
       const acceptEncodingHeader = headerLines.find((line) =>
         line.startsWith("Accept-Encoding")
@@ -22,7 +21,7 @@ const server = net.createServer((socket) => {
       let compressedBody;
 
       if (encoding && encoding.includes("gzip")) {
-        compressedBody = zlib.gzipSync(body);
+        compressedBody = zlib.gzipSync(echoPath);
         headers += `Content-Encoding: gzip\r\nContent-Length: ${compressedBody.length}\r\n`;
       } else {
         headers += `Content-Length: ${Buffer.byteLength(echoPath)}\r\n`;
