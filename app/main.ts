@@ -15,7 +15,7 @@ const server = net.createServer((socket) => {
       )[0];
       const [_, echoPath] = path.split("/echo/");
       let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
-      if (encoding) {
+      if (encoding && encoding.split(": ")[1] === "gzip") {
         headers += `Content-Type: text/plain\r\nContent-Encoding: ${
           encoding.split(": ")[1]
         }\r\n`;
