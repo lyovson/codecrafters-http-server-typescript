@@ -18,21 +18,17 @@ const server = net.createServer((socket) => {
         ?.split(": ")[1];
       let compressedBody;
       if (encoding && encoding.indexOf("gzip") !== -1) {
-        compressedBody = zlib.gzipSync(body);
+        compressedBody = zlib.gzipSync(body).toString("hex");
         headers = `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
           compressedBody ? compressedBody.length : echoPath.length
         }\r\n`;
       }
-      console.log(
-        `HTTP/1.1 200 OK\r\n${headers}\r\n${
-          compressedBody ? compressedBody : echoPath
-        }\r\n`
-      );
+      console.log(compressedBody);
 
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
           compressedBody ? compressedBody : echoPath
-        }\r\n`
+        }`
       );
     } else if (path === "/user-agent") {
       const agent = headerLines
