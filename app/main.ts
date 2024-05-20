@@ -25,15 +25,23 @@ const server = net.createServer((socket) => {
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
     } else if (path.startsWith("/files/")) {
-      const [_, __, fileName] = path.split("/");
       const args = process.argv.slice(2);
       const [___, dir] = args;
-      const filePath = dir + "/" + fileName;
+      const [_, __, fileName] = path.split("/");
+      const filePath = dir + fileName;
 
-      console.log(fileName);
+      if (method === "POST") {
+        const body = headerLines[headerLines.length - 1];
+        try {
+          fs.writeFileSync(filePath, body);
+          socket.write("HTTP/1.1 201 Created\r\n\r\n");
+        } catch (e) {
+          socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+        }
+      }
 
       try {
-        const file = fs.readFileSync(dir + "/" + fileName, "utf-8");
+        const file = fs.readFileSync(filePath, "utf-8");
         if (file) {
           socket.write(
             `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${file.length}\r\n\r\n${file}`
