@@ -10,17 +10,14 @@ const server = net.createServer((socket) => {
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
-      const encoding = headerLines.filter((line) =>
-        line.startsWith("Accept-Encoding")
-      )[0];
       const [_, echoPath] = path.split("/echo/");
       let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
-      if (encoding && encoding.split(": ")[1] === "gzip") {
-        headers += `Content-Type: text/plain\r\nContent-Encoding: ${
-          encoding.split(": ")[1]
-        }\r\n`;
+      const encoding = headerLines
+        .filter((line) => line.startsWith("Accept-Encoding"))[0]
+        .split(": ")[1];
+      if (encoding && encoding.indexOf("gzip") !== -1) {
+        headers += `Content-Type: text/plain\r\nContent-Encoding: ${encoding}\r\n`;
       }
-      console.log(headers);
 
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${echoPath}`);
     } else if (path === "/user-agent") {
