@@ -32,7 +32,7 @@ const server = net.createServer((socket) => {
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
           compressedBody ? compressedBody : echoPath
-        }`
+        }\r\n`
       );
     } else if (path === "/user-agent") {
       const agent = headerLines
