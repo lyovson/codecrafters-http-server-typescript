@@ -12,10 +12,12 @@ const server = net.createServer((socket) => {
     } else if (path.startsWith("/echo/")) {
       const [_, echoPath] = path.split("/echo/");
       let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
-      const encoding = headerLines
-        .filter((line) => line.startsWith("Accept-Encoding"))[0]
-        .split(": ")[1];
-      if (encoding && encoding.indexOf("gzip") !== -1) {
+      const encoding = headerLines.filter((line) =>
+        line.startsWith("Accept-Encoding")
+      )[0];
+
+      const zip = encoding.split(": ")[1];
+      if (encoding && zip.indexOf("gzip") !== -1) {
         headers += `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\n`;
       }
 
