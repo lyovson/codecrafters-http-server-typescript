@@ -16,12 +16,17 @@ const server = net.createServer((socket) => {
       const encoding = headerLines
         .filter((line) => line.startsWith("Accept-Encoding"))[0]
         ?.split(": ")[1];
-      let compressedBody;
+      let compressedBody: any;
       if (encoding && encoding.indexOf("gzip") !== -1) {
-        compressedBody = zlib.gzipSync(body).toString("hex");
-        headers = `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
-          compressedBody ? zlib.gzipSync(body).byteLength : echoPath.length
-        }\r\n`;
+        compressedBody = zlib.gzip(body, (err, buffer) => {
+          if (err) {
+            console.log(err);
+          }
+          headers = `Content-Type: text/plain\r\nContent-Encoding: ${"gzip"}\r\nContent-Length: ${
+            compressedBody ? compressedBody : echoPath.length
+          }\r\n`;
+          return buffer;
+        });
       }
       console.log(compressedBody);
 
