@@ -4,7 +4,6 @@ import * as zlib from "zlib";
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
-    console.log(data.toString());
     const [requestLine, ...headerLines] = data.toString().split("\r\n");
     const [method, path, version] = requestLine.split(" ");
 
@@ -24,7 +23,11 @@ const server = net.createServer((socket) => {
           compressedBody ? compressedBody.length : echoPath.length
         }\r\n`;
       }
-      console.log(headers);
+      console.log(
+        `HTTP/1.1 200 OK\r\n${headers}\r\n${
+          compressedBody ? compressedBody : echoPath
+        }\r\n`
+      );
 
       socket.write(
         `HTTP/1.1 200 OK\r\n${headers}\r\n${
@@ -35,11 +38,7 @@ const server = net.createServer((socket) => {
       const agent = headerLines
         .filter((line) => line.startsWith("User-Agent"))[0]
         .split(": ")[1];
-      console.log(
-        headerLines
-          .filter((line) => line.startsWith("User-Agent"))[0]
-          .split(": ")[1]
-      );
+
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
     } else if (path.startsWith("/files/")) {
