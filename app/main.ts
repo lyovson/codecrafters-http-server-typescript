@@ -10,8 +10,18 @@ const server = net.createServer((socket) => {
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
+      const encoding = headerLines.filter((line) =>
+        line.startsWith("Accept-Encoding")
+      )[0];
       const [_, echoPath] = path.split("/echo/");
-      const headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
+      let headers = `Content-Type: text/plain\r\nContent-Length: ${echoPath.length}\r\n`;
+      if (encoding) {
+        headers += `Content-Type: text/plain\r\nContent-Encoding: ${
+          encoding.split(": ")[1]
+        }\r\n`;
+      }
+      console.log(headers);
+
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${echoPath}`);
     } else if (path === "/user-agent") {
       const agent = headerLines
