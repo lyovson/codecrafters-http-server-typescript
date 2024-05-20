@@ -1,9 +1,12 @@
+import * as fs from "fs";
 import * as net from "net";
 
 const server = net.createServer((socket) => {
   socket.on("data", (data) => {
+    console.log(data.toString());
     const [requestLine, ...headerLines] = data.toString().split("\r\n");
     const [method, path, version] = requestLine.split(" ");
+
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
@@ -21,6 +24,17 @@ const server = net.createServer((socket) => {
       );
       const headers = `Content-Type: text/plain\r\nContent-Length: ${agent.length}\r\n`;
       socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${agent}`);
+    } else if (path.startsWith("/file/")) {
+      const [_, fileName] = path.split("/file/");
+      const [__, dir] = process.argv.slice(2);
+      const filePath = `${dir}${fileName}`;
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf8");
+        const headers = `Content-Type: application/octet-stream\r\nContent-Length: ${fileContent.length}\r\n`;
+        socket.write(`HTTP/1.1 200 OK\r\n${headers}\r\n${fileContent}`);
+      } catch (err) {
+        socket.write(`HTTP/1.1 404 Not Found\r\n\r\n`);
+      }
     } else {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
     }
